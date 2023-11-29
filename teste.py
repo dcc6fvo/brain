@@ -1,52 +1,63 @@
-import paramiko
 import time
-import Database
+import requests
+import subprocess
+import socket
+import os
+import json
 
-from os import chmod
-from Crypto.PublicKey import RSA
+def checkAdopted():
+    
+    file = open("check", "w")
+    file.write("adopted=true")
+    file.close()
 
-def doTask(client,command,message):
+def doPost(url,adoption):
 
-    stdin, stdout, stderr = client.exec_command(command)
+    r = requests.post(url, adoption)
+    return r
 
-    for line in stdout:
-        print(line.strip('\n'))
+def get_hostname():
 
-    print(message)
+    return socket.gethostname()
 
-def installDependencies(client):
+def get_uuid():
+    dmidecode = subprocess.Popen(['dmidecode'],
+                                      stdout=subprocess.PIPE,
+                                      bufsize=1,
+                                      universal_newlines=True
+                                      )
 
-    doTask(client,'sudo apt-get update -y','===> apt get updated <===')    
-    doTask(client,'sudo apt-get install unclutter nginx imagemagick chromium-browser php php-fpm -y','===> various dependencies installed <===')
+    while True:
+        line = dmidecode.stdout.readline()
+        if "UUID:" in str(line):
+            uuid = str(line).split("UUID:", 1)[1].split()[0]
+            return uuid
+        if not line:
+            break
 
-def generateSSHKeyPair():
+def start_adoption(dev_uuid, dev_hostname):
 
-    key = RSA.generate(2048)
-    with open("/tmp/private.key", 'wb') as content_file:
-        chmod("/tmp/private.key", 600)
-        content_file.write(key.exportKey('PEM'))
-    pubkey = key.publickey()
-    with open("/tmp/public.key", 'wb') as content_file:
-        content_file.write(pubkey.exportKey('OpenSSH'))
+    adoption = {}
+    adoption["id"] = dev_uuid
+    adoption["surname"] = dev_hostname
 
-    with Database("localhost","brain","123456","brain") as db:
+    r = doPost('http://127.0.0.1:8000/api/devices/adoption',adoption)
+    response_code = r.status_code
+    response_json = json.loads(r.text)
 
-        #db.execute('CREATE TABLE comments(pkey INTEGER PRIMARY KEY AUTOINCREMENT, username VARCHAR, comment_body VARCHAR, date_posted TIMESTAMP)')
-        #db.execute('INSERT INTO comments (username, comment_body, date_posted) VALUES (?, ?, current_date)', ('tom', 'this is a comment'))
-        comments = db.query('SELECT * FROM comments')
-        print(comments)
+    #adoption created
+    if(response_code == 201):
+        print(r)
+    elif(response_code == 401):
+        print(response_code)
 
+    print(response_json.get("message")) 
 
 def main():
 
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect('192.168.1.193', username='suporte', password='123456')
-
-    generateSSHKeyPair()
-    #installDependencies(client)
-
-    client.close()
+    dev_uuid = get_uuid()
+    dev_hostname = get_hostname()
+    start_adoption(dev_uuid, dev_hostname)
 
 if __name__ == "__main__":
     main()
