@@ -39,7 +39,10 @@ def start_adoption(dev_uuid, dev_hostname):
 
     adoption = {}
     adoption["id"] = dev_uuid
+    adoption["humanhash"] = dev_uuid[0:8]
     adoption["surname"] = dev_hostname
+
+    print(adoption)
 
     r = doPost('http://127.0.0.1:8000/api/devices/adoption',adoption)
     response_code = r.status_code
