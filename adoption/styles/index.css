@@ -1,0 +1,40 @@
+html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden
+}
+
+h1{
+    display: block;
+    font-size: 2em;
+    margin-top: 0.67em;
+    margin-bottom: 0.67em;
+    margin-left: 0;
+    margin-right: 0;
+    color: red;
+    font-weight: bold;
+}
+
+h2{
+    display: block;
+    font-size: 1.5em;
+    margin-top: 0.67em;
+    margin-bottom: 0.67em;
+    margin-left: 0;
+    margin-right: 0;
+    color: black;
+    font-weight: bold;
+}
+
+.container{
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.qrcode{
+    height:640px;
+    width:640px;
+}
