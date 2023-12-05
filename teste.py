@@ -4,6 +4,7 @@ import subprocess
 import socket
 import os
 import json
+import logging
 
 def checkAdopted():
     
@@ -35,6 +36,11 @@ def get_uuid():
         if not line:
             break
 
+def install_frontpage(name):
+    logging.info("Thread %s: starting", name)
+    time.sleep(2)
+    logging.info("Thread %s: finishing", name)
+
 def start_adoption(dev_uuid, dev_hostname):
 
     adoption = {}
@@ -49,14 +55,17 @@ def start_adoption(dev_uuid, dev_hostname):
     response_json = json.loads(r.text)
 
     #adoption created
-    if(response_code == 201):
+    if(response_code == 200):
         print(r)
-    elif(response_code == 401):
+    elif(response_code == 400):
         print(response_code)
 
     print(response_json.get("message")) 
 
 def main():
+
+    format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=format, level=logging.INFO,datefmt="%H:%M:%S")
 
     dev_uuid = get_uuid()
     dev_hostname = get_hostname()
