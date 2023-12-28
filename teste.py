@@ -36,10 +36,13 @@ def get_uuid():
         if not line:
             break
 
-def install_frontpage(name):
-    logging.info("Thread %s: starting", name)
-    time.sleep(2)
-    logging.info("Thread %s: finishing", name)
+def apt_update():
+    logging.info("Thread: starting")
+    try:
+        subprocess.check_call(['apt-get', 'update'], stdout=open(os.devnull,'wb'))
+    except subprocess.CalledProcessError as e:
+            print(e.output)
+    logging.info("Thread: finishing")
 
 def start_adoption(dev_uuid, dev_hostname):
 
@@ -54,13 +57,15 @@ def start_adoption(dev_uuid, dev_hostname):
     response_code = r.status_code
     response_json = json.loads(r.text)
 
-    #adoption created
+    #
     if(response_code == 200):
-        print(r)
+        apt_update()
+
+    #awaiting adoption
     elif(response_code == 400):
         print(response_code)
 
-    print(response_json.get("message")) 
+    #print(response_json.get("message")) 
 
 def main():
 
