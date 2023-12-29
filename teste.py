@@ -59,13 +59,13 @@ def running_task(tasks):
        
     for x in tasks:
         command = x["command"].split()
-        logging.info("Task N" +str(x["id"])+ " starting")
+        logging.info("Task " +str(x["id"])+ " starting")
         try:
             logging.info(subprocess.check_output(command))
             confirm = {}
             confirm["id"] = x["id"]
             doPost('http://127.0.0.1:8000/api/devices/tasks/confirm/',confirm)
-            logging.info("Task N" +str(x["id"])+ " finished")
+            logging.info("Task " +str(x["id"])+ " finished")
 
         except subprocess.CalledProcessError as cpe:
             logging.error(cpe.output)
