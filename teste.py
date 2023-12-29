@@ -6,12 +6,6 @@ import os
 import json
 import logging
 
-def checkAdopted():
-    
-    file = open("check", "w")
-    file.write("adopted=true")
-    file.close()
-
 def doPost(url,adoption):
 
     r = requests.post(url, adoption)
@@ -45,9 +39,9 @@ def apt_update():
     logging.info("Thread: starting")
     try:
         #subprocess.check_call(['apt-get', 'update'], stdout=open(os.devnull,'wb'))
-        print(subprocess.check_output(["apt-get", "update"]))
+        logging.info(subprocess.check_output(["apt-get", "update"]))
     except subprocess.CalledProcessError as e:
-            print(e.output)
+        logging.error(e.output)
     logging.info("Thread: finishing")
 
 def start_adoption(adoption):
@@ -59,33 +53,40 @@ def start_adoption(adoption):
         if(response_json.get("message") ==  'Device already adopted' ):
             break
         logging.info(response_json.get("message"))    
-        time.sleep(2)
+        time.sleep(5)
 
 def running_task(tasks):
-    
-    logging.info("Task: starting")
-    
+       
     for x in tasks:
         command = x["command"].split()
-        #print(x["command"])
+        logging.info("Task N" +str(x["id"])+ " starting")
         try:
-            print(subprocess.check_output(command))
-        except subprocess.CalledProcessError as e:
-            print(e.output)
+            logging.info(subprocess.check_output(command))
+            confirm = {}
+            confirm["id"] = x["id"]
+            doPost('http://127.0.0.1:8000/api/devices/tasks/confirm/',confirm)
+            logging.info("Task N" +str(x["id"])+ " finished")
+
+        except subprocess.CalledProcessError as cpe:
+            logging.error(cpe.output)
+        except Exception as e:
+            logging.error(e.output)
     
-    logging.info("Task: finishing")
 
 def taking_tasks(adoption):
 
     while True:
         logging.info('taking tasks')    
-        time.sleep(2)
+        time.sleep(5)
 
         r = doGet('http://127.0.0.1:8000/api/devices/tasks/'+ adoption["id"])
         response_code = r.status_code
         response_json = json.loads(r.text)
-        #print(response_json.get("tasks"))
-        running_task(response_json.get("tasks"))
+        try:
+            running_task(response_json.get("tasks"))
+        except Exception as e:
+            logging.error(e.output)
+
 
 def main():
 
