@@ -39,7 +39,8 @@ def get_uuid():
 def apt_update():
     logging.info("Thread: starting")
     try:
-        subprocess.check_call(['apt-get', 'update'], stdout=open(os.devnull,'wb'))
+        #subprocess.check_call(['apt-get', 'update'], stdout=open(os.devnull,'wb'))
+        print(subprocess.check_output(["apt-get", "update"]))
     except subprocess.CalledProcessError as e:
             print(e.output)
     logging.info("Thread: finishing")
@@ -53,19 +54,12 @@ def start_adoption(dev_uuid, dev_hostname):
 
     print(adoption)
 
-    r = doPost('http://127.0.0.1:8000/api/devices/adoption',adoption)
-    response_code = r.status_code
-    response_json = json.loads(r.text)
-
-    #
-    if(response_code == 200):
-        apt_update()
-
-    #awaiting adoption
-    elif(response_code == 400):
-        print(response_code)
-
-    #print(response_json.get("message")) 
+    while True:
+        r = doPost('http://127.0.0.1:8000/api/devices/adoption',adoption)
+        response_code = r.status_code
+        response_json = json.loads(r.text)
+        print(response_json.get("message"))
+        time.sleep(2)
 
 def main():
 
@@ -75,6 +69,9 @@ def main():
     dev_uuid = get_uuid()
     dev_hostname = get_hostname()
     start_adoption(dev_uuid, dev_hostname)
+        
+
+
 
 if __name__ == "__main__":
     main()
