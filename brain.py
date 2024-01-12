@@ -40,43 +40,6 @@ def get_uuid():
         if not line:
             break
 
-def apt_update():
-    logging.info("Running apt-get update..")
-    try:
-        #subprocess.check_call(['apt-get', 'update'], stdout=open(os.devnull,'wb'))
-        logging.info(subprocess.check_output(["apt-get", "update"]))
-    except subprocess.CalledProcessError as e:
-        logging.error(e.output)
-
-def apt_install_apache_and_php():
-    logging.info("Installing apache and php requirements")
-    try:
-        logging.info(subprocess.check_output(["apt-get", "install", "apache2", "php", "libapache2-mod-php", "-y"]))
-    except subprocess.CalledProcessError as e:
-        logging.error(e.output)
-
-def composer_install():
-    logging.info("Installing composer")
-    try:
-        logging.info(subprocess.check_output(["./utils/composer-install.sh"]))
-        logging.info(subprocess.check_output(["mv","composer.phar", "/usr/local/bin/composer"]))
-    except subprocess.CalledProcessError as e:
-        logging.error(e.output)
-
-def adoption_page_install():
-    logging.info("Configuring adoption page")
-    try:
-        logging.info(subprocess.check_output(["composer", "require", "chillerlan/php-qrcode"],cwd=client_local_www))
-    except subprocess.CalledProcessError as e:
-        logging.error(e.output)
-
-def install_basic_requirements():
-    logging.info("Installing basic requirements")
-    apt_update()
-    apt_install_apache_and_php()
-    composer_install()
-    adoption_page_install()
-
 def start_adoption(adoption):
    
     while True:
@@ -109,7 +72,7 @@ def taking_tasks(adoption):
 
     while True:
         logging.info('taking tasks')    
-        time.sleep(5)
+        time.sleep(10)
 
         r = doGet(server_host_protocol+'://'+server_host_address+':'+server_host_port+'/api/devices/tasks/'+ adoption["id"])
         response_code = r.status_code
