@@ -123,6 +123,7 @@ configuring_kiosk(){
     isunclutter=$(is_apt_installed "unclutter")
     isimagemagick=$(is_apt_installed "imagemagick")
     ischrome=$(is_apt_installed "chromium-browser")
+    ischrome2=$(is_apt_installed "chromium")
     
     if [ $isunclutter -eq 0 ]; then
         apt-get install unclutter -y
@@ -132,7 +133,7 @@ configuring_kiosk(){
         apt-get install imagemagick -y
     fi
 
-    if [ $ischrome -eq 0 ]; then
+    if [ $ischrome -eq 0 && $ischrome2 -eq 0 ]; then
         apt-get install chromium-browser -y
 
         if [ $? -eq 100 ]; then
@@ -158,7 +159,14 @@ configuring_kiosk(){
     fi
 
     if [ ! -d "/home/$local_user/.config/chromium/Default/Extensions/pjgjpabbgnnoohijnillgbckikfkbjed" ]; then
-        tar -xvzf $local_base_dir/kiosk/chromium_config_folder.tar.gz --strip-components=2 /home/$local_user
+        tar -xvzf $local_base_dir/kiosk/chromium_config_folder.tar.gz --strip-components=2 -C /home/$local_user
+        rm -rf /home/$local_user/.config/google-chrome/Singleton*
+
+        if [ $ischrome2 -eq 1 ]; then
+            sed -i "s/chromium-browse/chromium/g" /lib/systemd/system/kiosk.sh
+            
+        fi
+
     fi
     
 }
@@ -175,14 +183,14 @@ echo -ne 'Starting.. this will take some minutes.. please be patient'
 echo -ne 'Running apt-get update..'
 apt-get update >/dev/null 2>&1
 
-#echo -ne 'Installing basic software..'
-#basic_software_install
+echo -ne 'Installing basic software..'
+basic_software_install
 
-#echo -ne 'Configuring index adoption page'
-#configuring_index_adoption_page
+echo -ne 'Configuring index adoption page'
+configuring_index_adoption_page
 
-#echo -ne 'Configuring nginx'
-#configuring_nginx
+echo -ne 'Configuring nginx'
+configuring_nginx
 
 echo -ne 'Configuring kiosk'
 configuring_kiosk
