@@ -105,9 +105,9 @@ configuring_index_adoption_page(){
         rm $client_local_www/index.html
     fi
 
-    if [ -f "$client_local_www/index.nginx-debian.html"]; then
-        rm $client_local_www/index.nginx-debian.html
-    fi
+    #if [ -f "$client_local_www/index.nginx-debian.html" ]; then
+    #    rm $client_local_www/index.nginx-debian.html
+    #fi
 }
 
 configuring_nginx(){
@@ -133,11 +133,14 @@ configuring_kiosk(){
         apt-get install imagemagick -y
     fi
 
-    if [ $ischrome -eq 0 && $ischrome2 -eq 0 ]; then
+    if [ $ischrome -eq 0 ]; then
         apt-get install chromium-browser -y
+        ischrome=1
 
         if [ $? -eq 100 ]; then
             apt-get install chromium -y
+            ischrome2=1
+            ischrome=0
         fi
     fi
     
@@ -163,12 +166,38 @@ configuring_kiosk(){
         rm -rf /home/$local_user/.config/google-chrome/Singleton*
 
         if [ $ischrome2 -eq 1 ]; then
-            sed -i "s/chromium-browse/chromium/g" /lib/systemd/system/kiosk.sh
-            
+            sed -i "s/chromium-browse/chromium/g" /home/$local_user/kiosk.sh
+            sed -i "s/chromium-browser-v7/chromium/g" /home/$local_user/restart-kiosk.sh 
         fi
 
     fi
+
+    chown $local_user:$local_user /home/$local_user/kiosk.sh
+    chown $local_user:$local_user /home/$local_user/restart-kiosk.sh
+
+    chmod +x /home/$local_user/kiosk.sh
+    chmod +x /home/$local_user/restart-kiosk.sh
+
+    systemctl set-default graphical.target
+
+    chown -R $www_user:$www_user $client_local_www
+
+    touch /home/$local_user/kiosk.log
+    chown $local_user:$local_user /home/$local_user/kiosk.log
+
+}
+
+set_crontab_job(){
     
+    #write out current crontab
+    crontab -l > $1
+    
+    #echo new cron into cron file
+    echo $2 >> $1
+    
+    #install new cron file
+    crontab $1
+    rm $1
 }
 
 server_host_address="192.168.1.31"
@@ -176,22 +205,27 @@ server_host_protocol="http"
 server_host_port="8000"
 client_local_www="/var/www/html"
 local_user='suporte'
-
+www_user='www-data'
 local_base_dir=$(pwd)
 
-echo -ne 'Starting.. this will take some minutes.. please be patient'
-echo -ne 'Running apt-get update..'
+echo 'Starting.. this will take some minutes.. please be patient \n'
+echo 'Running apt-get update.. \n'
 apt-get update >/dev/null 2>&1
 
-echo -ne 'Installing basic software..'
+echo 'Installing basic software..\n'
 basic_software_install
 
-echo -ne 'Configuring index adoption page'
+echo 'Configuring index adoption page \n'
 configuring_index_adoption_page
 
-echo -ne 'Configuring nginx'
+echo 'Configuring nginx \n'
 configuring_nginx
 
-echo -ne 'Configuring kiosk'
+echo 'Configuring kiosk \n'
 configuring_kiosk
 
+echo 'Setting reboot crontab \n'
+set_crontab_job "reboot" "0 7 * * * /sbin/shutdown -r now"
+
+echo 'Setting kiosk restart script on crontab \n'
+set_crontab_job "kiosk-restart" "*/5 * * * * /home/$local_user/restart-kiosk.sh &"
