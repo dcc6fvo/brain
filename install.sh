@@ -185,7 +185,7 @@ configuring_kiosk(){
     touch /home/$local_user/kiosk.log
     chown $local_user:$local_user /home/$local_user/kiosk.log
 
-    rm -rf /home/$local_user/.config/google-chrome/Singleton*
+    rm -rf /home/$local_user/.config/chromium/Singleton*
 
 }
 
