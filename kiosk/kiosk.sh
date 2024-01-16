@@ -17,7 +17,7 @@ else
 fi
 
 
-if pgrep -x chromium-browse >/dev/null
+if pgrep -x chromium-browser >/dev/null
 then
 	echo "$data chromium already running" >> /home/###/kiosk.log
 else
@@ -25,7 +25,7 @@ else
 	sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' /home/###/.config/chromium/Default/Preferences
 	sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/' /home/###/.config/chromium/Default/Preferences
 
-	/usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk --disable-pinch --overscroll-history-navigation=0
+	sudo -u ### /usr/bin/chromium-browser --noerrdialogs --disable-infobars --kiosk --disable-pinch --overscroll-history-navigation=0
 	#/usr/bin/chromium-browser --incognito --noerrdialogs --disable-infobars --kiosk --disable-pinch --overscroll-history-navigation=0
 	#/usr/bin/chromium-browser --noerrdialogs --disable-infobars
 fi

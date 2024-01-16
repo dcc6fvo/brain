@@ -1,0 +1,1 @@
+0 7 * * * ### /sbin/shutdown -r now

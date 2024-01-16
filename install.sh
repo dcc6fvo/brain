@@ -159,14 +159,14 @@ configuring_kiosk(){
     if [ ! -f "/lib/systemd/system/kiosk.service" ]; then
        cp $local_base_dir/kiosk/kiosk.service /lib/systemd/system/kiosk.service
        sed -i "s/###/$local_user/g" /lib/systemd/system/kiosk.service
+       sudo systemctl enable kiosk.service
     fi
 
     if [ ! -d "/home/$local_user/.config/chromium/Default/Extensions/pjgjpabbgnnoohijnillgbckikfkbjed" ]; then
         tar -xvzf $local_base_dir/kiosk/chromium_config_folder.tar.gz --strip-components=2 -C /home/$local_user
-        rm -rf /home/$local_user/.config/google-chrome/Singleton*
-
+    
         if [ $ischrome2 -eq 1 ]; then
-            sed -i "s/chromium-browse/chromium/g" /home/$local_user/kiosk.sh
+            sed -i "s/chromium-browser/chromium/g" /home/$local_user/kiosk.sh
             sed -i "s/chromium-browser-v7/chromium/g" /home/$local_user/restart-kiosk.sh 
         fi
 
@@ -185,6 +185,8 @@ configuring_kiosk(){
     touch /home/$local_user/kiosk.log
     chown $local_user:$local_user /home/$local_user/kiosk.log
 
+    rm -rf /home/$local_user/.config/google-chrome/Singleton*
+
 }
 
 set_crontab_job(){
@@ -200,6 +202,13 @@ set_crontab_job(){
     rm $1
 }
 
+set_crontab_job2(){
+    
+    cd /etc/cron.d
+    touch $1
+    echo $2 >> $1
+}
+
 server_host_address="192.168.1.31"
 server_host_protocol="http"
 server_host_port="8000"
@@ -208,24 +217,28 @@ local_user='suporte'
 www_user='www-data'
 local_base_dir=$(pwd)
 
-echo 'Starting.. this will take some minutes.. please be patient \n'
-echo 'Running apt-get update.. \n'
+echo 'Starting.. this will take some minutes.. please be patient'
+echo 'Running apt-get update.. '
 apt-get update >/dev/null 2>&1
 
-echo 'Installing basic software..\n'
+echo 'Installing basic software..'
 basic_software_install
 
-echo 'Configuring index adoption page \n'
+echo 'Configuring index adoption page'
 configuring_index_adoption_page
 
-echo 'Configuring nginx \n'
+echo 'Configuring nginx'
 configuring_nginx
 
-echo 'Configuring kiosk \n'
+echo 'Configuring kiosk'
 configuring_kiosk
 
-echo 'Setting reboot crontab \n'
-set_crontab_job "reboot" "0 7 * * * /sbin/shutdown -r now"
+echo 'Setting reboot crontab'
+cp $local_base_dir/crontab/reboot /etc/cron.d/reboot
+sed -i "s/###/$local_user/g" /etc/cron.d/reboot
+#set_crontab_job2 "reboot" "0 7 * * * /sbin/shutdown -r now"
 
-echo 'Setting kiosk restart script on crontab \n'
-set_crontab_job "kiosk-restart" "*/5 * * * * /home/$local_user/restart-kiosk.sh &"
+echo 'Setting kiosk restart script on crontab'
+cp $local_base_dir/crontab/restart-kiosk /etc/cron.d/restart-kiosk
+sed -i "s/###/$local_user/g" /etc/cron.d/restart-kiosk
+#set_crontab_job2 "kiosk-restart" "*/5 * * * * /home/$local_user/restart-kiosk.sh &"
